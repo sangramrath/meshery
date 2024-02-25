@@ -3,7 +3,7 @@ layout: default
 title: Exploring Kubernetes Pods with Meshery Playground
 abstract: Learn Kubernetes Pods with Meshery Playground
 permalink: guides/tutorials/playground/kubernetes-pods
-redirect_from: guides/tutorials/playground/kubernetes-pods/
+#redirect_from: guides/tutorials/playground/kubernetes-pods/
 type: tutorials
 category: playground
 language: en
