@@ -2,6 +2,7 @@ import { BasicMarkdown, CircularProgress, styled } from '@layer5/sistent';
 import { SnackbarContent } from 'notistack';
 import { forwardRef } from 'react';
 import { CheckCircle, Error, Info, Warning } from '@mui/icons-material';
+import { lighten } from '@mui/material';
 
 const drawerWidth = 256;
 
@@ -38,6 +39,16 @@ export const StyledAppContent = styled('div')({
   flex: 1,
   display: 'flex',
   flexDirection: 'column',
+  position: 'relative',
+  overflow: 'visible',
+});
+
+export const StyledContentWrapper = styled('div')({
+  flex: 1,
+  display: 'flex',
+  flexDirection: 'column',
+  overflow: 'auto',
+  minHeight: 0,
 });
 
 export const StyledDrawer = styled('nav', {
@@ -67,24 +78,22 @@ export const StyledDrawer = styled('nav', {
 
 const StyledSnackbarContent = styled(SnackbarContent)(({ theme, variant }) => {
   const notificationColors = {
-    success: theme.palette.success.main,
-    info: theme.palette.info.main,
-    warning: theme.palette.warning.main,
-    error: theme.palette.error.main,
+    success: theme.palette.text.success,
+    info: theme.palette.text.info,
+    warning: theme.palette.text.warning,
+    error: theme.palette.text.error,
   };
 
-  const backgroundColors = {
-    light: 'rgb(248, 252, 248)',
-    dark: '#323232',
-  };
+  const baseColor = notificationColors[variant] || notificationColors.info;
 
-  const themeMode = theme.palette.mode; // Access theme mode (light or dark)
+  const backgroundColor = theme.palette.mode === 'light' ? lighten(baseColor, 0.95) : '#323232';
 
   return {
-    backgroundColor: backgroundColors[themeMode],
-    color: notificationColors[variant] || notificationColors.info,
+    backgroundColor,
+    color: baseColor,
     pointerEvents: 'auto',
     borderRadius: '0.3rem',
+    boxShadow: `0 0px 6px ${theme.palette.background.tabs}`,
   };
 });
 

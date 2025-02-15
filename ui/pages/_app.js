@@ -24,6 +24,8 @@ import getPageContext from '../components/PageContext';
 import { MESHERY_CONTROLLER_SUBSCRIPTION } from '../components/subscription/helpers';
 import { GQLSubscription } from '../components/subscription/subscriptionhandler';
 import dataFetch, { promisifiedDataFetch } from '../lib/data-fetch';
+import 'react-grid-layout/css/styles.css';
+import 'react-resizable/css/styles.css';
 import {
   actionTypes,
   makeStore,
@@ -75,6 +77,7 @@ import {
   StyledFooterBody,
   StyledFooterText,
   StyledMainContent,
+  StyledContentWrapper,
   StyledRoot,
   ThemeResponsiveSnackbar,
 } from '../themes/App.styles';
@@ -128,9 +131,13 @@ const Footer = ({ capabilitiesRegistry, handleL5CommunityClick }) => {
       <Typography
         variant="body2"
         align="center"
-        color="textSecondary"
         component="p"
-        style={{ color: theme.palette.text.disabled }}
+        style={{
+          color:
+            theme.palette.mode === 'light'
+              ? theme.palette.text.default
+              : theme.palette.text.disabled,
+        }}
       >
         <StyledFooterText onClick={handleL5CommunityClick}>
           {capabilitiesRegistry?.restrictedAccess?.isMesheryUiRestricted ? (
@@ -704,30 +711,32 @@ class MesheryApp extends App {
                                 abilityUpdated={this.state.abilityUpdated}
                               />
                             )}
-                            <StyledMainContent
-                              style={{
-                                padding: this.props.extensionType === 'navigator' && '0px',
-                              }}
-                            >
-                              <LocalizationProvider dateAdapter={AdapterMoment}>
-                                <ErrorBoundary customFallback={CustomErrorFallback}>
-                                  <Component
-                                    pageContext={this.pageContext}
-                                    contexts={this.state.k8sContexts}
-                                    activeContexts={this.state.activeK8sContexts}
-                                    setActiveContexts={this.setActiveContexts}
-                                    searchContexts={this.searchContexts}
-                                    {...pageProps}
-                                  />
-                                </ErrorBoundary>
-                              </LocalizationProvider>
-                            </StyledMainContent>
+                            <StyledContentWrapper>
+                              <StyledMainContent
+                                style={{
+                                  padding: this.props.extensionType === 'navigator' && '0px',
+                                }}
+                              >
+                                <LocalizationProvider dateAdapter={AdapterMoment}>
+                                  <ErrorBoundary customFallback={CustomErrorFallback}>
+                                    <Component
+                                      pageContext={this.pageContext}
+                                      contexts={this.state.k8sContexts}
+                                      activeContexts={this.state.activeK8sContexts}
+                                      setActiveContexts={this.setActiveContexts}
+                                      searchContexts={this.searchContexts}
+                                      {...pageProps}
+                                    />
+                                  </ErrorBoundary>
+                                </LocalizationProvider>
+                              </StyledMainContent>
+                              <Footer
+                                handleL5CommunityClick={this.handleL5CommunityClick}
+                                capabilitiesRegistry={this.props.capabilitiesRegistry}
+                              />
+                            </StyledContentWrapper>
                           </NotificationCenterProvider>
                         </SnackbarProvider>
-                        <Footer
-                          handleL5CommunityClick={this.handleL5CommunityClick}
-                          capabilitiesRegistry={this.props.capabilitiesRegistry}
-                        />
                       </StyledAppContent>
                     </StyledRoot>
                     <PlaygroundMeshDeploy
