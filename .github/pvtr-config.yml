@@ -1,6 +1,6 @@
 vars:
   token: {{ GH_ACCESS_TOKEN }} # GH classic token with all repo: read permissions
-  owner: meshery
+  owner: sangramrath
 
 policy:
   catalogs:
@@ -13,8 +13,4 @@ services:
   privateer:
     plugin: github-repo
     vars:
-      repo: privateer
-  privateer-sdk:
-    plugin: github-repo
-    vars:
-      repo: privateer-sdk
+      repo: meshery
