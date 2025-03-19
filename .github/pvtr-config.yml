@@ -10,7 +10,7 @@ policy:
 
 write-directory: evaluation_results
 services:
-  privateer:
+  meshery:
     plugin: github-repo
     vars:
       repo: meshery
