@@ -1,0 +1,48 @@
+header:
+  schema-version: 2.0.0
+  last-updated: '2025-01-01'
+  last-reviewed: '2025-01-01'
+  url: https://github.com/privateerproj/.github/blob/main/security-insights.yml
+  comment: |
+    This file contains the security insights information for the Privateer project.
+
+project:
+  name: Privateer
+  homepage: https://github.com/privateerproj
+  administrators:
+    - name: Eddie Knight
+      affiliation: Sonatype
+      social: https://bsky.app/profile/eddieknight.dev
+      primary: true
+  documentation:
+    quickstart-guide: https://github.com/privateerproj/privateer/blob/main/README.md
+    detailed-guide: https://github.com/privateerproj/privateer/blob/main/README.md
+    code-of-conduct: https://github.com/privateerproj/.github/blob/main/.github/CODE_OF_CONDUCT.md
+  repositories:
+    - name: Privateer
+      url: https://github.com/privateerproj/privateer
+      comment: |
+        Privateer is the core executable that orchestrates community-built plugins.
+    - name: Privateer SDK
+      url: https://github.com/privateerproj/privateer-sdk
+      comment: |
+        The Privateer SDK is a collection of tools and libraries to help developers create plugins for Privateer,
+        and enables those plugins to be called from Privateer.
+    - name: Plugin Generator Templates
+      url: https://github.com/privateerproj/plugin-generator-templates
+      comment: |
+        The Plugin Generator Templates are a set of templates that can be used to create new plugins for Privateer.
+        These are used by Privateer's generate-plugin command to create the boilerplate code for a new plugin.
+    - name: Plugin Example
+      url: https://github.com/privateerproj/plugin-example
+      comment: |
+        The Plugin Example is a simple example plugin that demonstrates how to create a plugin for Privateer.
+        It is for use as a reference for developers creating their own plugins.
+  vulnerability-reporting:
+    reports-accepted: true
+    bug-bounty-available: false
+    contact:
+      name: The security team at FooBar Enterprise provides security support for this project.
+      email: knight@linux.com
+      primary: true
+    security-policy: https://github.com/privateerproj/.github/blob/main/.github/SECURITY.md
