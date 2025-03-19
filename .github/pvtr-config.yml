@@ -1,0 +1,20 @@
+vars:
+  token: {{ GH_ACCESS_TOKEN }} # GH classic token with all repo: read permissions
+  owner: meshery
+
+policy:
+  catalogs:
+    - OSPS_B
+  applicability:
+    - Maturity Level 1
+
+write-directory: evaluation_results
+services:
+  privateer:
+    plugin: github-repo
+    vars:
+      repo: privateer
+  privateer-sdk:
+    plugin: github-repo
+    vars:
+      repo: privateer-sdk
