@@ -8,7 +8,7 @@ import (
 	"github.com/meshery/meshkit/logger"
 	"github.com/meshery/meshkit/utils"
 
-	meshsyncmodel "github.com/layer5io/meshsync/pkg/model"
+	meshsyncmodel "github.com/meshery/meshsync/pkg/model"
 	"github.com/meshery/schemas/models/v1beta1/component"
 	"gorm.io/gorm"
 )
@@ -28,9 +28,10 @@ type MeshsyncDataHandler struct {
 	ConnectionID uuid.UUID
 	InstanceID   uuid.UUID
 	Token        string
+	StopFunc     func()
 }
 
-func NewMeshsyncDataHandler(broker broker.Handler, dbHandler database.Handler, log logger.Handler, provider Provider, userID, connID, instanceID uuid.UUID, token string) *MeshsyncDataHandler {
+func NewMeshsyncDataHandler(broker broker.Handler, dbHandler database.Handler, log logger.Handler, provider Provider, userID, connID, instanceID uuid.UUID, token string, stopFunc func()) *MeshsyncDataHandler {
 	return &MeshsyncDataHandler{
 		broker:       broker,
 		dbHandler:    dbHandler,
@@ -40,6 +41,7 @@ func NewMeshsyncDataHandler(broker broker.Handler, dbHandler database.Handler, l
 		ConnectionID: connID,
 		InstanceID:   instanceID,
 		Token:        token,
+		StopFunc:     stopFunc,
 	}
 }
 
@@ -303,4 +305,10 @@ func (mh *MeshsyncDataHandler) Resync() error {
 		return ErrMeshsyncDataHandler(err)
 	}
 	return nil
+}
+
+func (mh *MeshsyncDataHandler) Stop() {
+	if mh.StopFunc != nil {
+		mh.StopFunc()
+	}
 }

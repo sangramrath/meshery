@@ -7,12 +7,16 @@ import {
   styled,
   MenuItem,
   CircularProgress,
+  WorkspaceIcon,
+  useMediaQuery,
+  useTheme,
+  Divider,
+  Button,
+  Box,
 } from '@sistent/sistent';
-import SettingsIcon from '@mui/icons-material/Settings';
 import { NoSsr } from '@sistent/sistent';
 import { StyledSelect } from './SpaceSwitcher';
 import { iconMedium } from 'css/icons.styles';
-import WorkspaceModal from './WorkspaceModal';
 import { WorkspaceModalContext } from '@/utils/context/WorkspaceModalContextProvider';
 import {
   useGetSelectedOrganization,
@@ -20,21 +24,22 @@ import {
   useUpdateSelectedWorkspaceMutation,
 } from '@/rtk-query/user';
 
-export const HoverMenuItem = styled(MenuItem)(() => ({
+export const HoverMenuItem = styled(MenuItem)(({ theme }) => ({
   display: 'flex',
-  justifyContent: 'space-between',
   alignItems: 'center',
   gap: '1rem',
-  '& .setting-icon': {
-    visibility: 'hidden',
+  '& .workspace-icon': {
     display: 'flex',
   },
-  '&:hover .setting-icon': {
-    visibility: 'visible',
+  '&.Mui-selected': {
+    backgroundColor: theme.palette.action.selected,
+    '&:hover': {
+      backgroundColor: theme.palette.action.selected + '!important',
+    },
   },
 }));
 
-const SettingsIconWrapper = styled('div')(({ theme }) => ({
+const WorkspaceIconWrapper = styled('div')(({ theme }) => ({
   '& svg': {
     color: theme.palette.icon.secondary,
   },
@@ -43,7 +48,7 @@ const SettingsIconWrapper = styled('div')(({ theme }) => ({
   },
 }));
 
-function WorkspaceSwitcher({ open }) {
+function WorkspaceSwitcher({ open, fromMobileView }) {
   const { selectedOrganization } = useGetSelectedOrganization();
   const {
     selectedWorkspace,
@@ -51,15 +56,16 @@ function WorkspaceSwitcher({ open }) {
     error: workspaceError,
     isLoading: isLoadingWorkspaces,
   } = useGetSelectedWorkspace();
+  const isSmallScreen = useMediaQuery('(max-width:400px)');
+  const theme = useTheme();
 
   const [updateSelectedWorkspace, { isLoading: isUpdatingSelectedWorkspace }] =
     useUpdateSelectedWorkspaceMutation();
 
   const {
-    open: workspaceModal,
     setSelectedWorkspace,
     openModal: openWorkspaceModal,
-    closeModal: closeWorkspaceModal,
+    setCreateNewWorkspaceModalOpen,
   } = useContext(WorkspaceModalContext);
 
   // useEffect(() => {
@@ -86,14 +92,19 @@ function WorkspaceSwitcher({ open }) {
   return (
     <NoSsr>
       {!isLoadingWorkspaces && allWorkspaces?.length > 0 && (
-        <div
-          style={{
-            width: open ? 'auto' : 0,
+        <Grid2
+          sx={{
+            width: isSmallScreen ? '80%' : open ? 'auto' : 0,
             overflow: open ? '' : 'hidden',
             transition: 'all 1s',
           }}
         >
-          <FormControl component="fieldset">
+          <FormControl
+            sx={{
+              width: isSmallScreen ? '100%' : 'auto',
+            }}
+            component="fieldset"
+          >
             <FormGroup>
               <FormControlLabel
                 key="SpacesPreferences"
@@ -108,8 +119,25 @@ function WorkspaceSwitcher({ open }) {
                             handleChangeWorkspace(e); // only call for new selection
                           }
                         }}
+                        SelectDisplayProps={{
+                          style: {
+                            display: 'flex',
+                            flexDirection: 'row',
+                            fill: '#eee',
+                            paddingBlock: '9px 8px',
+                            paddingInline: '18px 34px',
+                          },
+                        }}
                         renderValue={() => {
-                          return selectedWorkspace?.name || '';
+                          return (
+                            <span
+                              style={{
+                                color: fromMobileView ? theme.palette.text.default : undefined,
+                              }}
+                            >
+                              {selectedWorkspace?.name || ''}
+                            </span>
+                          );
                         }}
                         MenuProps={{
                           anchorOrigin: {
@@ -133,12 +161,36 @@ function WorkspaceSwitcher({ open }) {
                               }
                             }}
                           >
+                            <WorkspaceIconWrapper className="workspace-icon">
+                              <WorkspaceIcon {...iconMedium} />
+                            </WorkspaceIconWrapper>
                             <span>{works.name}</span>
-                            <SettingsIconWrapper className="setting-icon">
-                              <SettingsIcon {...iconMedium} />
-                            </SettingsIconWrapper>
                           </HoverMenuItem>
                         ))}
+                        <Divider />
+                        <Box gap={2} px={2} display={'flex'}>
+                          <Button
+                            variant="contained"
+                            onClick={() => {
+                              openWorkspaceModal(true);
+                            }}
+                          >
+                            Explore Workspaces
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            onClick={() => {
+                              setSelectedWorkspace({
+                                id: 'All Workspaces',
+                                name: 'All Workspaces',
+                              });
+                              setCreateNewWorkspaceModalOpen(true);
+                              openWorkspaceModal(true);
+                            }}
+                          >
+                            Create Workspace
+                          </Button>
+                        </Box>
                       </StyledSelect>
                     </Grid2>
                   </Grid2>
@@ -146,9 +198,8 @@ function WorkspaceSwitcher({ open }) {
               />
             </FormGroup>
           </FormControl>
-        </div>
+        </Grid2>
       )}
-      <WorkspaceModal workspaceModal={workspaceModal} closeWorkspaceModal={closeWorkspaceModal} />
     </NoSsr>
   );
 }

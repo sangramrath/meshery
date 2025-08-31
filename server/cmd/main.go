@@ -12,7 +12,6 @@ import (
 	"github.com/fsnotify/fsnotify"
 
 	"github.com/gofrs/uuid"
-	meshsyncmodel "github.com/layer5io/meshsync/pkg/model"
 	"github.com/meshery/meshery/mesheryctl/pkg/constants"
 	"github.com/meshery/meshery/server/handlers"
 	"github.com/meshery/meshery/server/helpers"
@@ -32,11 +31,12 @@ import (
 	meshmodel "github.com/meshery/meshkit/models/meshmodel/registry"
 	"github.com/meshery/meshkit/utils/broadcast"
 	"github.com/meshery/meshkit/utils/events"
-	"github.com/spf13/viper"
-
+	meshsyncmodel "github.com/meshery/meshsync/pkg/model"
+	schemasConnection "github.com/meshery/schemas/models/v1beta1/connection"
 	"github.com/meshery/schemas/models/v1beta1/environment"
 	"github.com/meshery/schemas/models/v1beta1/workspace"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -114,12 +114,15 @@ func main() {
 	viper.SetDefault("SKIP_DOWNLOAD_CONTENT", false)
 	viper.SetDefault("SKIP_COMP_GEN", false)
 	viper.SetDefault("PLAYGROUND", false)
+	viper.SetDefault("MESHSYNC_DEFAULT_DEPLOYMENT_MODE", schemasConnection.MeshsyncDeploymentModeDefault)
 	store.Initialize()
 
 	log.Info("Local Provider capabilities are: ", version)
 
 	// Get the channel
 	log.Info("Meshery Server release channel is: ", releasechannel)
+
+	log.Infof("MESHSYNC_DEFAULT_DEPLOYMENT_MODE is %s", viper.GetString("MESHSYNC_DEFAULT_DEPLOYMENT_MODE"))
 
 	home, err := os.UserHomeDir()
 	if viper.GetString("USER_DATA_FOLDER") == "" {
@@ -221,6 +224,14 @@ func main() {
 		os.Exit(1)
 	}
 
+	meshsyncDefaultDeploymentMode := schemasConnection.MeshsyncDeploymentModeFromString(
+		viper.GetString("MESHSYNC_DEFAULT_DEPLOYMENT_MODE"),
+	)
+
+	if meshsyncDefaultDeploymentMode == schemasConnection.MeshsyncDeploymentModeUndefined {
+		meshsyncDefaultDeploymentMode = schemasConnection.MeshsyncDeploymentModeDefault
+	}
+
 	lProv := &models.DefaultLocalProvider{
 		ProviderBaseURL:                 DefaultProviderURL,
 		MapPreferencePersister:          preferencePersister,
@@ -242,6 +253,7 @@ func main() {
 		EventsPersister:                 &models.EventsPersister{DB: dbHandler},
 		GenericPersister:                dbHandler,
 		Log:                             log,
+		MeshsyncDefaultDeploymentMode:   meshsyncDefaultDeploymentMode,
 	}
 
 	// Local remote provider is initalized here.
@@ -306,19 +318,20 @@ func main() {
 			continue
 		}
 		cp := &models.RemoteProvider{
-			RemoteProviderURL:          parsedURL.String(),
-			RefCookieName:              parsedURL.Host + "_ref",
-			SessionName:                parsedURL.Host,
-			TokenStore:                 make(map[string]string),
-			LoginCookieDuration:        1 * time.Hour,
-			SessionPreferencePersister: &models.SessionPreferencePersister{DB: dbHandler},
-			UserCapabilitiesPersister:  &models.UserCapabilitiesPersister{DB: dbHandler},
-			ProviderVersion:            version,
-			SmiResultPersister:         &models.SMIResultsPersister{DB: dbHandler},
-			GenericPersister:           dbHandler,
-			EventsPersister:            &models.EventsPersister{DB: dbHandler},
-			Log:                        log,
-			CookieDuration:             24 * time.Hour,
+			RemoteProviderURL:             parsedURL.String(),
+			RefCookieName:                 parsedURL.Host + "_ref",
+			SessionName:                   parsedURL.Host,
+			TokenStore:                    make(map[string]string),
+			LoginCookieDuration:           1 * time.Hour,
+			SessionPreferencePersister:    &models.SessionPreferencePersister{DB: dbHandler},
+			UserCapabilitiesPersister:     &models.UserCapabilitiesPersister{DB: dbHandler},
+			ProviderVersion:               version,
+			SmiResultPersister:            &models.SMIResultsPersister{DB: dbHandler},
+			GenericPersister:              dbHandler,
+			EventsPersister:               &models.EventsPersister{DB: dbHandler},
+			Log:                           log,
+			CookieDuration:                24 * time.Hour,
+			MeshsyncDefaultDeploymentMode: meshsyncDefaultDeploymentMode,
 		}
 
 		cp.Initialize()
@@ -347,7 +360,7 @@ func main() {
 	models.InitMeshSyncRegistrationQueue()
 	mhelpers.InitRegistrationHelperSingleton(dbHandler, log, &connToInstanceTracker, hc.EventBroadcaster)
 	policies.SyncRelationship.Lock()
-	h := handlers.NewHandlerInstance(hc, meshsyncCh, log, brokerConn, k8sComponentsRegistrationHelper, mctrlHelper, dbHandler, events.NewEventStreamer(), regManager, providerEnvVar, &rego, &connToInstanceTracker)
+	h := handlers.NewHandlerInstance(hc, meshsyncCh, log, brokerConn, k8sComponentsRegistrationHelper, mctrlHelper, dbHandler, events.NewEventStreamer(), regManager, providerEnvVar, &rego, &connToInstanceTracker, meshsyncDefaultDeploymentMode)
 	policies.SyncRelationship.Unlock()
 
 	b := broadcast.NewBroadcaster(100)

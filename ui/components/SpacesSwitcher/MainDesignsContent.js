@@ -30,7 +30,12 @@ import { RESOURCE_TYPE } from '@/utils/Enum';
 import ShareModal from './ShareModal';
 import InfoModal from '../General/Modals/Information/InfoModal';
 import { useGetMeshModelsQuery } from '@/rtk-query/meshModel';
-import { openDesignInKanvas, useIsKanvasDesignerEnabled } from '@/utils/utils';
+import {
+  isDesignOpenInKanvas,
+  mergeDesignWithCurrent,
+  openDesignInKanvas,
+  useIsKanvasDesignerEnabled,
+} from '@/utils/utils';
 import Router, { useRouter } from 'next/router';
 import CAN from '@/utils/can';
 import { keys } from '@/utils/permission_constants';
@@ -43,6 +48,7 @@ import {
   useGetWorkspacesQuery,
 } from '@/rtk-query/workspace';
 import { useNotification } from '@/utils/hooks/useNotification';
+import { MergeOutlined } from '@mui/icons-material';
 
 const MainDesignsContent = ({
   page,
@@ -55,6 +61,8 @@ const MainDesignsContent = ({
   workspace,
   refetch,
   isMultiSelectMode,
+  showWorkspaceName = true,
+  showOrganizationName = true,
 }) => {
   const { data: currentUser } = useGetLoggedInUserQuery({});
   const [selectedDesign, setSelectedDesign] = useState(null);
@@ -162,6 +170,13 @@ const MainDesignsContent = ({
   };
   const theme = useTheme();
   const DESIGN_ACTIONS = {
+    MERGE_DESIGN: {
+      id: 'merge_design',
+      title: 'Merge Into Current Design',
+      icon: <MergeOutlined fill={theme.palette.icon.default} />,
+      enabled: () =>
+        isDesignOpenInKanvas() && CAN(keys.EDIT_DESIGN.action, keys.EDIT_DESIGN.subject),
+    },
     EXPORT_DESIGN: {
       id: 'export_design',
       title: 'Export Design',
@@ -198,6 +213,13 @@ const MainDesignsContent = ({
     },
   };
 
+  const handleMerge = (design) => {
+    mergeDesignWithCurrent(design.id, design.name);
+    if (workspaceSwitcherContext?.closeModal) {
+      workspaceSwitcherContext.closeModal();
+    }
+  };
+
   const getMenuOptions = ({
     design,
     handleDesignDownloadModal,
@@ -208,6 +230,10 @@ const MainDesignsContent = ({
     refetch,
   }) => {
     const options = [
+      {
+        ...DESIGN_ACTIONS.MERGE_DESIGN,
+        handler: () => handleMerge(design),
+      },
       {
         ...DESIGN_ACTIONS.EXPORT_DESIGN,
         handler: () => handleDesignDownloadModal(design),
@@ -263,6 +289,8 @@ const MainDesignsContent = ({
             return (
               <React.Fragment key={`${design?.id}-${design?.name}`}>
                 <DesignViewListItem
+                  showWorkspaceName={showWorkspaceName}
+                  showOrganizationName={showOrganizationName}
                   activeUsers={activeUsers?.[design?.id]}
                   type={RESOURCE_TYPE.DESIGN}
                   selectedItem={design}
